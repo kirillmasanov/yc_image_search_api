@@ -1,8 +1,11 @@
 const form = document.getElementById('searchForm');
 const fileInput = document.getElementById('fileInput');
 const uploadArea = document.getElementById('uploadArea');
+const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+const uploadPreview = document.getElementById('uploadPreview');
+const previewImg = document.getElementById('previewImg');
+const clearFileBtn = document.getElementById('clearFileBtn');
 const browseBtn = document.getElementById('browseBtn');
-const fileNameEl = document.getElementById('fileName');
 const imageUrlInput = document.getElementById('imageUrl');
 const siteFilter = document.getElementById('siteFilter');
 const limitInput = document.getElementById('limitInput');
@@ -14,6 +17,10 @@ const tabResultsCount = document.getElementById('tabResultsCount');
 const resultsGrid = document.getElementById('results');
 const debugRequest = document.getElementById('debugRequest');
 const debugResponse = document.getElementById('debugResponse');
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxSource = document.getElementById('lightboxSource');
+const lightboxClose = document.getElementById('lightboxClose');
 
 // ── Tabs ────────────────────────────────────────────────────────────────────
 
@@ -28,10 +35,16 @@ function switchTab(name) {
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-// ── Mutual exclusivity ──────────────────────────────────────────────────────
+// ── File preview ─────────────────────────────────────────────────────────────
+
+let previewObjectUrl = null;
 
 function setFileMode(file) {
-  fileNameEl.textContent = file.name;
+  if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+  previewObjectUrl = URL.createObjectURL(file);
+  previewImg.src = previewObjectUrl;
+  uploadPlaceholder.classList.add('hidden');
+  uploadPreview.classList.remove('hidden');
   uploadArea.classList.add('has-file');
   uploadArea.classList.remove('disabled');
   imageUrlInput.disabled = true;
@@ -40,7 +53,10 @@ function setFileMode(file) {
 
 function clearFileMode() {
   fileInput.value = '';
-  fileNameEl.textContent = '';
+  if (previewObjectUrl) { URL.revokeObjectURL(previewObjectUrl); previewObjectUrl = null; }
+  previewImg.src = '';
+  uploadPreview.classList.add('hidden');
+  uploadPlaceholder.classList.remove('hidden');
   uploadArea.classList.remove('has-file');
   imageUrlInput.disabled = false;
 }
@@ -49,17 +65,15 @@ fileInput.addEventListener('change', () => {
   if (fileInput.files.length > 0) setFileMode(fileInput.files[0]);
 });
 
+clearFileBtn.addEventListener('click', (e) => { e.stopPropagation(); clearFileMode(); });
+
 imageUrlInput.addEventListener('input', () => {
-  if (imageUrlInput.value.trim()) {
-    uploadArea.classList.add('disabled');
-  } else {
-    uploadArea.classList.remove('disabled');
-  }
+  uploadArea.classList.toggle('disabled', !!imageUrlInput.value.trim());
 });
 
 uploadArea.addEventListener('click', (e) => {
-  if (e.target === browseBtn) return;
-  if (uploadArea.classList.contains('has-file')) { clearFileMode(); return; }
+  if (e.target === clearFileBtn) return;
+  if (uploadArea.classList.contains('has-file')) return;
   if (!uploadArea.classList.contains('disabled')) fileInput.click();
 });
 
@@ -84,6 +98,25 @@ uploadArea.addEventListener('drop', (e) => {
     setFileMode(file);
   }
 });
+
+// ── Lightbox ─────────────────────────────────────────────────────────────────
+
+function openLightbox(imageProxyUrl, sourceUrl) {
+  lightboxImg.src = imageProxyUrl;
+  lightboxSource.href = sourceUrl;
+  lightbox.classList.remove('hidden');
+  document.body.classList.add('lightbox-open');
+}
+
+function closeLightbox() {
+  lightbox.classList.add('hidden');
+  lightboxImg.src = '';
+  document.body.classList.remove('lightbox-open');
+}
+
+lightboxClose.addEventListener('click', closeLightbox);
+lightbox.querySelector('.lightbox-backdrop').addEventListener('click', closeLightbox);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
 // ── Form submit ─────────────────────────────────────────────────────────────
 
@@ -150,16 +183,25 @@ function renderResults(results, total) {
 
     return `
       <div class="card">
-        <a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">
-          <div class="card-thumb">${thumb}</div>
-          <div class="card-body">
-            <div class="card-title">${esc(r.title || 'Без заголовка')}</div>
-            ${r.domain ? `<div class="card-domain">${esc(r.domain)}</div>` : ''}
-            ${r.snippet ? `<div class="card-snippet">${esc(r.snippet)}</div>` : ''}
-          </div>
+        <div class="card-thumb" data-proxy="${esc(proxyUrl || '')}" data-source="${esc(r.source_url)}">${thumb}</div>
+        <a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer" class="card-body">
+          <div class="card-title">${esc(r.title || 'Без заголовка')}</div>
+          ${r.domain ? `<div class="card-domain">${esc(r.domain)}</div>` : ''}
+          ${r.snippet ? `<div class="card-snippet">${esc(r.snippet)}</div>` : ''}
         </a>
       </div>`;
   }).join('');
+
+  // Delegate lightbox clicks to thumbnails
+  resultsGrid.addEventListener('click', onThumbClick, { once: true });
+}
+
+function onThumbClick(e) {
+  const thumb = e.target.closest('.card-thumb');
+  if (!thumb) { resultsGrid.addEventListener('click', onThumbClick, { once: true }); return; }
+  const proxyUrl = thumb.dataset.proxy;
+  const sourceUrl = thumb.dataset.source;
+  if (proxyUrl) openLightbox(proxyUrl, sourceUrl);
 }
 
 function renderDebug(requestPayload, responseRaw) {
