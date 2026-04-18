@@ -34,9 +34,9 @@ async def search_images(
             image_bytes = await file.read()
             if len(image_bytes) > MAX_UPLOAD_BYTES:
                 raise HTTPException(413, "Файл слишком большой (макс. 20 МБ).")
-            results = await yandex_client.search_by_file(image_bytes, normalized_site)
+            results, req_payload, resp_raw = await yandex_client.search_by_file(image_bytes, normalized_site)
         else:
-            results = await yandex_client.search_by_url(url.strip(), normalized_site)  # type: ignore[union-attr]
+            results, req_payload, resp_raw = await yandex_client.search_by_url(url.strip(), normalized_site)  # type: ignore[union-attr]
     except HTTPException:
         raise
     except httpx.HTTPStatusError as exc:
@@ -48,7 +48,7 @@ async def search_images(
     except httpx.RequestError as exc:
         raise HTTPException(503, f"Сетевая ошибка: {exc}")
 
-    return SearchResponse(results=results, total=len(results))
+    return SearchResponse(results=results, total=len(results), request_payload=req_payload, response_raw=resp_raw)
 
 
 _PLACEHOLDER_SVG = (

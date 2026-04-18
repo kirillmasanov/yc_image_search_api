@@ -8,8 +8,24 @@ const siteFilter = document.getElementById('siteFilter');
 const searchBtn = document.getElementById('searchBtn');
 const loading = document.getElementById('loading');
 const errorMsg = document.getElementById('errorMsg');
-const resultsHeader = document.getElementById('resultsHeader');
+const tabSection = document.getElementById('tabSection');
+const tabResultsCount = document.getElementById('tabResultsCount');
 const resultsGrid = document.getElementById('results');
+const debugRequest = document.getElementById('debugRequest');
+const debugResponse = document.getElementById('debugResponse');
+
+// ── Tabs ────────────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.tab-btn').forEach((btn) => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('hidden', p.id !== `tab${capitalize(name)}`));
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 // ── Mutual exclusivity ──────────────────────────────────────────────────────
 
@@ -28,58 +44,33 @@ function clearFileMode() {
   imageUrlInput.disabled = false;
 }
 
-function setUrlMode() {
-  uploadArea.classList.add('disabled');
-}
-
-function clearUrlMode() {
-  uploadArea.classList.remove('disabled');
-}
-
 fileInput.addEventListener('change', () => {
-  if (fileInput.files.length > 0) {
-    setFileMode(fileInput.files[0]);
-  }
+  if (fileInput.files.length > 0) setFileMode(fileInput.files[0]);
 });
 
 imageUrlInput.addEventListener('input', () => {
   if (imageUrlInput.value.trim()) {
-    setUrlMode();
+    uploadArea.classList.add('disabled');
   } else {
-    clearUrlMode();
+    uploadArea.classList.remove('disabled');
   }
 });
 
-// Allow clicking upload area to clear file & re-enable URL when in file mode
 uploadArea.addEventListener('click', (e) => {
-  if (e.target === browseBtn) return; // handled separately
-  if (uploadArea.classList.contains('has-file')) {
-    clearFileMode();
-    return;
-  }
-  if (!uploadArea.classList.contains('disabled')) {
-    fileInput.click();
-  }
+  if (e.target === browseBtn) return;
+  if (uploadArea.classList.contains('has-file')) { clearFileMode(); return; }
+  if (!uploadArea.classList.contains('disabled')) fileInput.click();
 });
 
-browseBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  fileInput.click();
-});
+browseBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
 
 // ── Drag and drop ───────────────────────────────────────────────────────────
 
 uploadArea.addEventListener('dragover', (e) => {
   e.preventDefault();
-  if (!uploadArea.classList.contains('disabled')) {
-    uploadArea.classList.add('dragover');
-  }
+  if (!uploadArea.classList.contains('disabled')) uploadArea.classList.add('dragover');
 });
-
-uploadArea.addEventListener('dragleave', () => {
-  uploadArea.classList.remove('dragover');
-});
-
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
 uploadArea.addEventListener('drop', (e) => {
   e.preventDefault();
   uploadArea.classList.remove('dragover');
@@ -98,13 +89,11 @@ uploadArea.addEventListener('drop', (e) => {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   hideError();
-  resultsGrid.innerHTML = '';
-  resultsHeader.classList.add('hidden');
+  tabSection.classList.add('hidden');
   loading.classList.remove('hidden');
   searchBtn.disabled = true;
 
   const formData = new FormData();
-
   if (fileInput.files.length > 0) {
     formData.append('file', fileInput.files[0]);
   } else {
@@ -117,7 +106,6 @@ form.addEventListener('submit', async (e) => {
     }
     formData.append('url', url);
   }
-
   const site = siteFilter.value.trim();
   if (site) formData.append('site', site);
 
@@ -129,6 +117,9 @@ form.addEventListener('submit', async (e) => {
       return;
     }
     renderResults(data.results, data.total);
+    renderDebug(data.request_payload, data.response_raw);
+    switchTab('results');
+    tabSection.classList.remove('hidden');
   } catch (err) {
     showError('Сетевая ошибка: ' + err.message);
   } finally {
@@ -140,13 +131,12 @@ form.addEventListener('submit', async (e) => {
 // ── Rendering ───────────────────────────────────────────────────────────────
 
 function renderResults(results, total) {
+  tabResultsCount.textContent = total ? `(${total})` : '';
+
   if (!results || results.length === 0) {
     resultsGrid.innerHTML = '<p class="no-results">По этому изображению ничего не найдено.</p>';
     return;
   }
-
-  resultsHeader.textContent = `Найдено результатов: ${total}`;
-  resultsHeader.classList.remove('hidden');
 
   resultsGrid.innerHTML = results.map((r) => {
     const proxyUrl = r.thumbnail_url
@@ -168,6 +158,11 @@ function renderResults(results, total) {
         </a>
       </div>`;
   }).join('');
+}
+
+function renderDebug(requestPayload, responseRaw) {
+  debugRequest.textContent = JSON.stringify(requestPayload, null, 2);
+  debugResponse.textContent = JSON.stringify(responseRaw, null, 2);
 }
 
 function showError(msg) {

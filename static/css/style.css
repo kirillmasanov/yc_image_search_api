@@ -246,3 +246,56 @@ button[type="submit"]:disabled { background: #a0bfe0; cursor: not-allowed; }
   color: #888;
   padding: 40px 0;
 }
+
+/* ── Tabs ── */
+.tab-section { margin-top: 28px; }
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #e0e3ea;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  padding: 9px 18px;
+  border: none;
+  background: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  border-radius: 6px 6px 0 0;
+  transition: color 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tab-btn:hover { color: #333; background: #f5f6f8; }
+.tab-btn.active { color: #4a90e2; border-bottom-color: #4a90e2; font-weight: 600; }
+
+.tab-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #999;
+}
+.tab-btn.active .tab-count { color: #7ab3ed; }
+
+.tab-panel { }
+.tab-panel.hidden { display: none; }
+
+.json-pre {
+  font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  background: #f7f8fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  overflow: auto;
+  white-space: pre;
+  color: #2d2d2d;
+  max-height: 600px;
+}

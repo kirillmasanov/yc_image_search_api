@@ -20,7 +20,7 @@ class YandexImageSearchClient:
 
     async def search_by_url(
         self, image_url: str, site: str | None = None
-    ) -> list[ImageResult]:
+    ) -> tuple[list[ImageResult], dict, dict]:
         payload: dict = {"folderId": settings.yandex_folder_id, "url": image_url}
         if site:
             payload["site"] = site
@@ -28,14 +28,14 @@ class YandexImageSearchClient:
 
     async def search_by_file(
         self, image_bytes: bytes, site: str | None = None
-    ) -> list[ImageResult]:
+    ) -> tuple[list[ImageResult], dict, dict]:
         b64 = base64.b64encode(image_bytes).decode("utf-8")
         payload: dict = {"folderId": settings.yandex_folder_id, "data": b64}
         if site:
             payload["site"] = site
         return await self._call(payload)
 
-    async def _call(self, payload: dict) -> list[ImageResult]:
+    async def _call(self, payload: dict) -> tuple[list[ImageResult], dict, dict]:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 YANDEX_SEARCH_URL,
@@ -43,7 +43,13 @@ class YandexImageSearchClient:
                 headers=self._headers,
             )
             response.raise_for_status()
-            return self._parse(response.json())
+            raw = response.json()
+            # Truncate base64 data in displayed payload to keep it readable
+            display_payload = {
+                **payload,
+                **({"data": payload["data"][:40] + "…"} if "data" in payload else {}),
+            }
+            return self._parse(raw), display_payload, raw
 
     def _parse(self, data: dict) -> list[ImageResult]:
         results = []

@@ -40,8 +40,25 @@
 
     <div id="errorMsg" class="error hidden"></div>
 
-    <div id="resultsHeader" class="results-header hidden"></div>
-    <div id="results" class="results-grid"></div>
+    <div id="tabSection" class="tab-section hidden">
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="results">Результаты <span id="tabResultsCount" class="tab-count"></span></button>
+        <button class="tab-btn" data-tab="request">Request</button>
+        <button class="tab-btn" data-tab="response">Response</button>
+      </div>
+
+      <div id="tabResults" class="tab-panel">
+        <div id="results" class="results-grid"></div>
+      </div>
+
+      <div id="tabRequest" class="tab-panel hidden">
+        <pre id="debugRequest" class="json-pre"></pre>
+      </div>
+
+      <div id="tabResponse" class="tab-panel hidden">
+        <pre id="debugResponse" class="json-pre"></pre>
+      </div>
+    </div>
   </div>
 
   <script src="/static/js/main.js"></script>
