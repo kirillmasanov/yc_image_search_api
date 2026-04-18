@@ -14,5 +14,5 @@ class ImageResult(BaseModel):
 class SearchResponse(BaseModel):
     results: list[ImageResult]
     total: int
-    request_payload: dict
+    request_payload: dict | list
     response_raw: dict

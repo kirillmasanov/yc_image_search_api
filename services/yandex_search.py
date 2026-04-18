@@ -66,10 +66,16 @@ class YandexImageSearchClient:
         all_images = first_raw.get("images", []) + extra_images
         combined_raw = {**first_raw, "images": all_images, "pagesFetched": pages_needed}
 
-        display_payload = {
+        base = {
             **payload,
             **({"data": payload["data"][:40] + "…"} if "data" in payload else {}),
         }
+        if pages_needed == 1:
+            display_payload = {**base, "page": 0}
+        else:
+            display_payload = [
+                {**base, "page": p} for p in range(pages_needed)
+            ]
         return self._parse(all_images, limit), display_payload, combined_raw
 
     async def _fetch_page(
