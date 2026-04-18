@@ -118,6 +118,14 @@ lightboxClose.addEventListener('click', closeLightbox);
 lightbox.querySelector('.lightbox-backdrop').addEventListener('click', closeLightbox);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
+resultsGrid.addEventListener('click', (e) => {
+  const thumb = e.target.closest('.card-thumb');
+  if (!thumb) return;
+  const proxyUrl = thumb.dataset.proxy;
+  const sourceUrl = thumb.dataset.source;
+  if (proxyUrl) openLightbox(proxyUrl, sourceUrl);
+});
+
 // ── Form submit ─────────────────────────────────────────────────────────────
 
 form.addEventListener('submit', async (e) => {
@@ -192,16 +200,6 @@ function renderResults(results, total) {
       </div>`;
   }).join('');
 
-  // Delegate lightbox clicks to thumbnails
-  resultsGrid.addEventListener('click', onThumbClick, { once: true });
-}
-
-function onThumbClick(e) {
-  const thumb = e.target.closest('.card-thumb');
-  if (!thumb) { resultsGrid.addEventListener('click', onThumbClick, { once: true }); return; }
-  const proxyUrl = thumb.dataset.proxy;
-  const sourceUrl = thumb.dataset.source;
-  if (proxyUrl) openLightbox(proxyUrl, sourceUrl);
 }
 
 function renderDebug(requestPayload, responseRaw) {
