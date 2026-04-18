@@ -15,9 +15,7 @@ app.include_router(search_router)
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(
-        request, "index.html", {"root_path": request.scope.get("root_path", "")}
-    )
+    return templates.TemplateResponse(request, "index.html")
 
 
 @app.get("/health", response_class=JSONResponse)

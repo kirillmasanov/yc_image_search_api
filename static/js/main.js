@@ -1,3 +1,6 @@
+// Определяем базовый путь: '' на корне, '/image-search' за nginx
+const ROOT_PATH = window.location.pathname.replace(/\/+$/, '').replace(/\/[^/]*$/, '') || '';
+
 const form = document.getElementById('searchForm');
 const fileInput = document.getElementById('fileInput');
 const uploadArea = document.getElementById('uploadArea');
@@ -153,7 +156,7 @@ form.addEventListener('submit', async (e) => {
   formData.append('limit', limitInput.value);
 
   try {
-    const response = await fetch(`${window.ROOT_PATH}/api/search`, { method: 'POST', body: formData });
+    const response = await fetch(`${ROOT_PATH}/api/search`, { method: 'POST', body: formData });
     const data = await response.json();
     if (!response.ok) {
       showError(data.detail || `Ошибка ${response.status}`);
@@ -183,7 +186,7 @@ function renderResults(results, total) {
 
   resultsGrid.innerHTML = results.map((r) => {
     const proxyUrl = r.thumbnail_url
-      ? `${window.ROOT_PATH}/api/proxy?url=${encodeURIComponent(r.thumbnail_url)}`
+      ? `${ROOT_PATH}/api/proxy?url=${encodeURIComponent(r.thumbnail_url)}`
       : null;
     const thumb = proxyUrl
       ? `<img src="${proxyUrl}" alt="${esc(r.title)}" loading="lazy">`
