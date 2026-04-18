@@ -153,7 +153,7 @@ form.addEventListener('submit', async (e) => {
   formData.append('limit', limitInput.value);
 
   try {
-    const response = await fetch('/api/search', { method: 'POST', body: formData });
+    const response = await fetch(`${window.ROOT_PATH}/api/search`, { method: 'POST', body: formData });
     const data = await response.json();
     if (!response.ok) {
       showError(data.detail || `Ошибка ${response.status}`);
@@ -183,7 +183,7 @@ function renderResults(results, total) {
 
   resultsGrid.innerHTML = results.map((r) => {
     const proxyUrl = r.thumbnail_url
-      ? `/api/proxy?url=${encodeURIComponent(r.thumbnail_url)}`
+      ? `${window.ROOT_PATH}/api/proxy?url=${encodeURIComponent(r.thumbnail_url)}`
       : null;
     const thumb = proxyUrl
       ? `<img src="${proxyUrl}" alt="${esc(r.title)}" loading="lazy">`

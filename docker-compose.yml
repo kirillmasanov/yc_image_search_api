@@ -5,6 +5,13 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - ROOT_PATH=${ROOT_PATH:-}
+    command: >
+      uv run uvicorn main:app
+      --host 0.0.0.0
+      --port 8000
+      --root-path ${ROOT_PATH:-}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
