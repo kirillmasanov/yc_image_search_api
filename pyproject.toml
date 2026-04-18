@@ -1,5 +1,5 @@
 [project]
-name = "image-search-api"
+name = "yc-image-search-api"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.12"
