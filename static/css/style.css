@@ -13,11 +13,32 @@ body {
   margin: 0 auto;
 }
 
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.yc-logo {
+  height: 36px;
+  width: auto;
+  flex-shrink: 0;
+}
+
 h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: 0;
   color: #1a1a2e;
+}
+.h1-super {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #4a90e2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
 
 /* ── Form ── */
