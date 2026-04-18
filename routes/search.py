@@ -18,6 +18,7 @@ async def search_images(
     file: Optional[UploadFile] = File(default=None),
     url: Optional[str] = Form(default=None),
     site: Optional[str] = Form(default=None),
+    limit: int = Form(default=20, ge=1, le=100),
 ) -> SearchResponse:
     if file is None and not url:
         raise HTTPException(422, "Укажите файл или URL изображения.")
@@ -34,9 +35,9 @@ async def search_images(
             image_bytes = await file.read()
             if len(image_bytes) > MAX_UPLOAD_BYTES:
                 raise HTTPException(413, "Файл слишком большой (макс. 20 МБ).")
-            results, req_payload, resp_raw = await yandex_client.search_by_file(image_bytes, normalized_site)
+            results, req_payload, resp_raw = await yandex_client.search_by_file(image_bytes, normalized_site, limit)
         else:
-            results, req_payload, resp_raw = await yandex_client.search_by_url(url.strip(), normalized_site)  # type: ignore[union-attr]
+            results, req_payload, resp_raw = await yandex_client.search_by_url(url.strip(), normalized_site, limit)  # type: ignore[union-attr]
     except HTTPException:
         raise
     except httpx.HTTPStatusError as exc:

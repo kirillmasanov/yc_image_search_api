@@ -65,6 +65,32 @@ form {
 }
 #browseBtn:hover { color: #357abd; }
 
+/* Form row */
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+.form-row .form-group { flex: 1; margin-bottom: 0; }
+.form-group--narrow { flex: 0 0 140px !important; }
+.form-group input[type="number"] {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d0d5de;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input[type="number"]:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74,144,226,0.15);
+}
+@media (max-width: 480px) {
+  .form-row { flex-direction: column; }
+  .form-group--narrow { flex: 1 !important; }
+}
+
 /* Divider */
 .divider {
   display: flex;

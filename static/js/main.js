@@ -5,6 +5,7 @@ const browseBtn = document.getElementById('browseBtn');
 const fileNameEl = document.getElementById('fileName');
 const imageUrlInput = document.getElementById('imageUrl');
 const siteFilter = document.getElementById('siteFilter');
+const limitInput = document.getElementById('limitInput');
 const searchBtn = document.getElementById('searchBtn');
 const loading = document.getElementById('loading');
 const errorMsg = document.getElementById('errorMsg');
@@ -108,6 +109,7 @@ form.addEventListener('submit', async (e) => {
   }
   const site = siteFilter.value.trim();
   if (site) formData.append('site', site);
+  formData.append('limit', limitInput.value);
 
   try {
     const response = await fetch('/api/search', { method: 'POST', body: formData });
