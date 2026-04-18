@@ -2,7 +2,7 @@
 
 Веб-приложение для поиска изображений по картинке через [Yandex Cloud Search API](https://aistudio.yandex.ru/docs/ru/search-api/).
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green) ![uv](https://img.shields.io/badge/uv-package%20manager-purple)
+![Python](https://img.shields.io/badge/Python-3.12+-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green) ![uv](https://img.shields.io/badge/uv-package%20manager-purple)
 
 ## Возможности
 
@@ -16,7 +16,7 @@
 
 ## Требования
 
-- Python 3.11+
+- Python 3.12+
 - [uv](https://docs.astral.sh/uv/)
 - Аккаунт Yandex Cloud с доступом к Search API
 
@@ -24,7 +24,7 @@
 
 ```bash
 git clone <repo>
-cd image_search_api
+cd yc_image_search_api
 uv sync
 ```
 
@@ -68,7 +68,7 @@ uv run uvicorn main:app --reload
 
 ### `GET /api/proxy?url=<url>`
 
-Проксирует изображение через сервер для обхода hotlink protection.
+Проксирует изображение через сервер для обхода hotlink protection. При недоступности URL возвращает SVG-заглушку.
 
 ## Документация
 
