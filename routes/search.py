@@ -18,7 +18,7 @@ async def search_images(
     file: Optional[UploadFile] = File(default=None),
     url: Optional[str] = Form(default=None),
     site: Optional[str] = Form(default=None),
-    limit: int = Form(default=20, ge=1, le=100),
+    limit: int = Form(default=20, ge=1, le=500),
 ) -> SearchResponse:
     if file is None and not url:
         raise HTTPException(422, "Укажите файл или URL изображения.")
