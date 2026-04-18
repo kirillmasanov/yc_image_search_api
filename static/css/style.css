@@ -25,6 +25,28 @@ body {
   flex-shrink: 0;
 }
 
+.doc-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.doc-links a {
+  font-size: 0.78rem;
+  color: #888;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.15s;
+}
+.doc-links a::after {
+  content: "↗";
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+.doc-links a:hover { color: #4a90e2; }
+
 h1 {
   font-size: 1.75rem;
   font-weight: 700;
