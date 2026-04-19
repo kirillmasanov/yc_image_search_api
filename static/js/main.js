@@ -197,7 +197,7 @@ function renderResults(results, total) {
 
   resultsGrid.innerHTML = results.map((r) => {
     const proxyUrl = r.thumbnail_url
-      ? `${ROOT_PATH}/api/proxy?url=${encodeURIComponent(r.thumbnail_url)}`
+      ? `${ROOT_PATH}/api/proxy?url=${encodeURIComponent(r.thumbnail_url)}${r.source_url ? `&ref=${encodeURIComponent(r.source_url)}` : ''}`
       : null;
     const thumb = proxyUrl
       ? `<img src="${proxyUrl}" alt="${esc(r.title)}" loading="lazy">`

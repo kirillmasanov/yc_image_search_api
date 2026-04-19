@@ -1,5 +1,5 @@
 from typing import Optional
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 
 import httpx
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
@@ -64,23 +64,53 @@ _PLACEHOLDER_SVG = (
 ).encode()
 
 
-@router.get("/proxy")
-async def proxy_image(url: str = Query(...)) -> StreamingResponse:
-    image_url = unquote(url)
-    try:
-        async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
-            response = await client.get(
-                image_url,
-                headers={
-                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-                    "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-                },
-            )
-            response.raise_for_status()
-            content_type = response.headers.get("content-type", "")
-            if not content_type.startswith("image/"):
-                return StreamingResponse(iter([_PLACEHOLDER_SVG]), media_type="image/svg+xml")
-    except Exception:
-        return StreamingResponse(iter([_PLACEHOLDER_SVG]), media_type="image/svg+xml")
+_BASE_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+    "Accept-Language": "ru,en;q=0.9",
+}
 
-    return StreamingResponse(iter([response.content]), media_type=content_type)
+
+async def _fetch_image(client: httpx.AsyncClient, image_url: str, referer: str | None) -> httpx.Response | None:
+    headers = dict(_BASE_HEADERS)
+    if referer:
+        headers["Referer"] = referer
+    try:
+        response = await client.get(image_url, headers=headers)
+        response.raise_for_status()
+        if not response.headers.get("content-type", "").startswith("image/"):
+            return None
+        return response
+    except Exception:
+        return None
+
+
+@router.get("/proxy")
+async def proxy_image(
+    url: str = Query(...),
+    ref: Optional[str] = Query(default=None),
+) -> StreamingResponse:
+    image_url = unquote(url)
+    ref_url = unquote(ref) if ref else None
+    origin = f"{urlparse(image_url).scheme}://{urlparse(image_url).netloc}/"
+
+    candidates: list[str | None] = []
+    if ref_url:
+        candidates.append(ref_url)
+    if origin not in candidates:
+        candidates.append(origin)
+    candidates.append(None)
+
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+        for referer in candidates:
+            response = await _fetch_image(client, image_url, referer)
+            if response is not None:
+                return StreamingResponse(
+                    iter([response.content]),
+                    media_type=response.headers.get("content-type", "image/jpeg"),
+                )
+
+    return StreamingResponse(iter([_PLACEHOLDER_SVG]), media_type="image/svg+xml")
