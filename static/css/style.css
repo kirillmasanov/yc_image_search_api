@@ -186,6 +186,27 @@ form {
 }
 .optional { font-weight: 400; color: #999; }
 
+.input-with-clear {
+  position: relative;
+}
+.input-with-clear input[type="url"] {
+  padding-right: 36px;
+}
+.input-clear-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+}
+.input-clear-btn:hover { color: #e74c3c; }
+
 .form-group input[type="url"],
 .form-group input[type="text"] {
   width: 100%;

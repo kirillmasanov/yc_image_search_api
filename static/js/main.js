@@ -11,6 +11,7 @@ const previewImg = document.getElementById('previewImg');
 const clearFileBtn = document.getElementById('clearFileBtn');
 const browseBtn = document.getElementById('browseBtn');
 const imageUrlInput = document.getElementById('imageUrl');
+const clearUrlBtn = document.getElementById('clearUrlBtn');
 const siteFilter = document.getElementById('siteFilter');
 const limitInput = document.getElementById('limitInput');
 const searchBtn = document.getElementById('searchBtn');
@@ -72,7 +73,16 @@ fileInput.addEventListener('change', () => {
 clearFileBtn.addEventListener('click', (e) => { e.stopPropagation(); clearFileMode(); });
 
 imageUrlInput.addEventListener('input', () => {
-  uploadArea.classList.toggle('disabled', !!imageUrlInput.value.trim());
+  const hasValue = !!imageUrlInput.value.trim();
+  uploadArea.classList.toggle('disabled', hasValue);
+  clearUrlBtn.classList.toggle('hidden', !hasValue);
+});
+
+clearUrlBtn.addEventListener('click', () => {
+  imageUrlInput.value = '';
+  clearUrlBtn.classList.add('hidden');
+  uploadArea.classList.remove('disabled');
+  imageUrlInput.focus();
 });
 
 uploadArea.addEventListener('click', (e) => {
