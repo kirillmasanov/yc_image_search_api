@@ -1,3 +1,6 @@
+const ROOT_PATH = window.location.pathname.startsWith('/yc_image_search_api/')
+    ? '/yc_image_search_api'
+    : '';
 
 const form = document.getElementById('searchForm');
 const fileInput = document.getElementById('fileInput');
