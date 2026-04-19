@@ -1,5 +1,3 @@
-// Определяем базовый путь: '' на корне, '/image-search' за nginx
-const ROOT_PATH = window.location.pathname.replace(/\/+$/, '').replace(/\/[^/]*$/, '') || '';
 
 const form = document.getElementById('searchForm');
 const fileInput = document.getElementById('fileInput');
