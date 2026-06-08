@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Search API — Поиск по изображению</title>
+  <title>Search API — Поиск изображений</title>
   <link rel="stylesheet" href="{{ root_path }}/static/css/style.css">
 </head>
 <body>
@@ -12,16 +12,24 @@
       <img src="https://storage.yandexcloud.net/cloud-www-assets/main-icons/light/desktop/logo.svg"
            alt="Yandex Cloud" class="yc-logo">
       <div>
-        <h1><span class="h1-super">Search API</span>Поиск по изображению</h1>
+        <h1><span class="h1-super">Search API</span>Поиск изображений</h1>
         <nav class="doc-links">
-          <a href="https://aistudio.yandex.ru/docs/ru/search-api/operations/search-images-by-pic.html" target="_blank" rel="noopener">Как искать по изображению</a>
-          <a href="https://aistudio.yandex.ru/docs/ru/search-api/api-ref/ImageSearch/searchByImage.html" target="_blank" rel="noopener">API Reference</a>
+          <a href="https://aistudio.yandex.ru/docs/ru/search-api/concepts/image-search.html" target="_blank" rel="noopener">Обзор</a>
+          <a href="https://aistudio.yandex.ru/docs/ru/search-api/operations/search-images-by-pic.html" target="_blank" rel="noopener">Поиск по изображению</a>
+          <a href="https://aistudio.yandex.ru/docs/ru/search-api/operations/search-images.html" target="_blank" rel="noopener">Поиск по описанию</a>
+          <a href="https://aistudio.yandex.ru/docs/ru/search-api/api-ref/ImageSearch/" target="_blank" rel="noopener">API Reference</a>
           <a href="https://aistudio.yandex.ru/docs/ru/search-api/pricing.html" target="_blank" rel="noopener">Тарифы</a>
         </nav>
       </div>
     </div>
 
-    <form id="searchForm">
+    <div class="mode-toggle" id="modeToggle">
+      <button type="button" class="mode-btn active" data-mode="image">По изображению</button>
+      <button type="button" class="mode-btn" data-mode="text">По описанию</button>
+    </div>
+
+    <form id="searchForm" autocomplete="off">
+      <div id="imageModeFields">
       <div class="upload-area" id="uploadArea">
         <input type="file" id="fileInput" accept="image/*" hidden>
         <div id="uploadPlaceholder">
@@ -39,19 +47,110 @@
       <div class="form-group">
         <label for="imageUrl">Ссылка на изображение</label>
         <div class="input-with-clear">
-          <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg">
+          <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg" autocomplete="off">
           <button type="button" id="clearUrlBtn" class="input-clear-btn hidden" title="Очистить">✕</button>
         </div>
       </div>
 
+      <div class="form-group">
+        <label for="imageFamily">Семейный фильтр</label>
+        <select id="imageFamily">
+          <option value="FAMILY_MODE_MODERATE">умеренный</option>
+          <option value="FAMILY_MODE_NONE">выключен</option>
+          <option value="FAMILY_MODE_STRICT">строгий</option>
+        </select>
+      </div>
+      </div><!-- /#imageModeFields -->
+
+      <div id="textModeFields" class="hidden">
+        <div class="form-group">
+          <label for="queryInput">Текстовый запрос</label>
+          <input type="text" id="queryInput" placeholder="например: котята на снегу" autocomplete="off">
+        </div>
+
+        <div class="form-row form-row--filters">
+          <div class="form-group">
+            <label for="imgFormat">Формат</label>
+            <select id="imgFormat">
+              <option value="">любой</option>
+              <option value="IMAGE_FORMAT_JPEG">JPEG</option>
+              <option value="IMAGE_FORMAT_PNG">PNG</option>
+              <option value="IMAGE_FORMAT_GIF">GIF</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="imgSize">Размер</label>
+            <select id="imgSize">
+              <option value="">любой</option>
+              <option value="IMAGE_SIZE_ENORMOUS">очень большой</option>
+              <option value="IMAGE_SIZE_LARGE">большой</option>
+              <option value="IMAGE_SIZE_MEDIUM">средний</option>
+              <option value="IMAGE_SIZE_SMALL">маленький</option>
+              <option value="IMAGE_SIZE_TINY">очень маленький</option>
+              <option value="IMAGE_SIZE_WALLPAPER">обои</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="imgOrientation">Ориентация</label>
+            <select id="imgOrientation">
+              <option value="">любая</option>
+              <option value="IMAGE_ORIENTATION_HORIZONTAL">горизонтальная</option>
+              <option value="IMAGE_ORIENTATION_VERTICAL">вертикальная</option>
+              <option value="IMAGE_ORIENTATION_SQUARE">квадратная</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="imgColor">Цвет</label>
+            <select id="imgColor">
+              <option value="">любой</option>
+              <option value="IMAGE_COLOR_COLOR">цветной</option>
+              <option value="IMAGE_COLOR_GRAYSCALE">ч/б</option>
+              <option value="IMAGE_COLOR_RED">красный</option>
+              <option value="IMAGE_COLOR_ORANGE">оранжевый</option>
+              <option value="IMAGE_COLOR_YELLOW">жёлтый</option>
+              <option value="IMAGE_COLOR_GREEN">зелёный</option>
+              <option value="IMAGE_COLOR_CYAN">голубой</option>
+              <option value="IMAGE_COLOR_BLUE">синий</option>
+              <option value="IMAGE_COLOR_VIOLET">фиолетовый</option>
+              <option value="IMAGE_COLOR_WHITE">белый</option>
+              <option value="IMAGE_COLOR_BLACK">чёрный</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="familyMode">Семейный фильтр</label>
+            <select id="familyMode">
+              <option value="FAMILY_MODE_MODERATE">умеренный</option>
+              <option value="FAMILY_MODE_NONE">выключен</option>
+              <option value="FAMILY_MODE_STRICT">строгий</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="searchType">Регион поиска</label>
+            <select id="searchType">
+              <option value="SEARCH_TYPE_RU">Россия</option>
+              <option value="SEARCH_TYPE_COM">Международный</option>
+              <option value="SEARCH_TYPE_TR">Турция</option>
+              <option value="SEARCH_TYPE_KK">Казахстан</option>
+              <option value="SEARCH_TYPE_BE">Беларусь</option>
+              <option value="SEARCH_TYPE_UZ">Узбекистан</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="form-check">
+          <input type="checkbox" id="fixTypo" checked>
+          <span>Исправлять опечатки в запросе</span>
+        </label>
+      </div><!-- /#textModeFields -->
+
       <div class="form-row">
         <div class="form-group">
           <label for="siteFilter">Домен для поиска <span class="optional">(необязательно)</span></label>
-          <input type="text" id="siteFilter" placeholder="example.com">
+          <input type="text" id="siteFilter" placeholder="example.com" autocomplete="off">
         </div>
         <div class="form-group form-group--narrow">
           <label for="limitInput">Кол-во результатов</label>
-          <input type="number" id="limitInput" value="20" min="1" max="500">
+          <input type="number" id="limitInput" value="20" min="1" max="500" autocomplete="off">
         </div>
       </div>
 

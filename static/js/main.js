@@ -3,6 +3,18 @@ const ROOT_PATH = window.location.pathname.startsWith('/yc_image_search_api/')
     : '';
 
 const form = document.getElementById('searchForm');
+const modeToggle = document.getElementById('modeToggle');
+const imageModeFields = document.getElementById('imageModeFields');
+const textModeFields = document.getElementById('textModeFields');
+const queryInput = document.getElementById('queryInput');
+const imgFormat = document.getElementById('imgFormat');
+const imgSize = document.getElementById('imgSize');
+const imgOrientation = document.getElementById('imgOrientation');
+const imgColor = document.getElementById('imgColor');
+const familyMode = document.getElementById('familyMode');
+const searchType = document.getElementById('searchType');
+const fixTypo = document.getElementById('fixTypo');
+const imageFamily = document.getElementById('imageFamily');
 const fileInput = document.getElementById('fileInput');
 const uploadArea = document.getElementById('uploadArea');
 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
@@ -26,6 +38,19 @@ const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightboxImg');
 const lightboxSource = document.getElementById('lightboxSource');
 const lightboxClose = document.getElementById('lightboxClose');
+
+// ── Mode toggle ───────────────────────────────────────────────────────────────
+
+let currentMode = 'image';
+
+modeToggle.addEventListener('click', (e) => {
+  const btn = e.target.closest('.mode-btn');
+  if (!btn) return;
+  currentMode = btn.dataset.mode;
+  document.querySelectorAll('.mode-btn').forEach((b) => b.classList.toggle('active', b === btn));
+  imageModeFields.classList.toggle('hidden', currentMode !== 'image');
+  textModeFields.classList.toggle('hidden', currentMode !== 'text');
+});
 
 // ── Tabs ────────────────────────────────────────────────────────────────────
 
@@ -135,9 +160,9 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLight
 resultsGrid.addEventListener('click', (e) => {
   const thumb = e.target.closest('.card-thumb');
   if (!thumb) return;
-  const proxyUrl = thumb.dataset.proxy;
+  const fullUrl = thumb.dataset.full || thumb.dataset.proxy;
   const sourceUrl = thumb.dataset.source;
-  if (proxyUrl) openLightbox(proxyUrl, sourceUrl);
+  if (fullUrl) openLightbox(fullUrl, sourceUrl);
 });
 
 // ── Form submit ─────────────────────────────────────────────────────────────
@@ -150,24 +175,48 @@ form.addEventListener('submit', async (e) => {
   searchBtn.disabled = true;
 
   const formData = new FormData();
-  if (fileInput.files.length > 0) {
-    formData.append('file', fileInput.files[0]);
-  } else {
-    const url = imageUrlInput.value.trim();
-    if (!url) {
-      showError('Укажите файл или ссылку на изображение.');
+  let endpoint;
+
+  if (currentMode === 'text') {
+    const query = queryInput.value.trim();
+    if (!query) {
+      showError('Укажите текстовый запрос.');
       loading.classList.add('hidden');
       searchBtn.disabled = false;
       return;
     }
-    formData.append('url', url);
+    endpoint = `${ROOT_PATH}/api/search/text`;
+    formData.append('query', query);
+    if (imgFormat.value) formData.append('img_format', imgFormat.value);
+    if (imgSize.value) formData.append('img_size', imgSize.value);
+    if (imgOrientation.value) formData.append('img_orientation', imgOrientation.value);
+    if (imgColor.value) formData.append('img_color', imgColor.value);
+    formData.append('family', familyMode.value);
+    formData.append('search_type', searchType.value);
+    formData.append('fix_typo', fixTypo.checked ? 'FIX_TYPO_MODE_ON' : 'FIX_TYPO_MODE_OFF');
+  } else {
+    endpoint = `${ROOT_PATH}/api/search`;
+    formData.append('family', imageFamily.value);
+    if (fileInput.files.length > 0) {
+      formData.append('file', fileInput.files[0]);
+    } else {
+      const url = imageUrlInput.value.trim();
+      if (!url) {
+        showError('Укажите файл или ссылку на изображение.');
+        loading.classList.add('hidden');
+        searchBtn.disabled = false;
+        return;
+      }
+      formData.append('url', url);
+    }
   }
+
   const site = siteFilter.value.trim();
   if (site) formData.append('site', site);
   formData.append('limit', limitInput.value);
 
   try {
-    const response = await fetch(`${ROOT_PATH}/api/search`, { method: 'POST', body: formData });
+    const response = await fetch(endpoint, { method: 'POST', body: formData });
     const data = await response.json();
     if (!response.ok) {
       showError(data.detail || `Ошибка ${response.status}`);
@@ -191,21 +240,23 @@ function renderResults(results, total) {
   tabResultsCount.textContent = total ? `(${total})` : '';
 
   if (!results || results.length === 0) {
-    resultsGrid.innerHTML = '<p class="no-results">По этому изображению ничего не найдено.</p>';
+    resultsGrid.innerHTML = '<p class="no-results">Ничего не найдено.</p>';
     return;
   }
 
   resultsGrid.innerHTML = results.map((r) => {
-    const proxyUrl = r.thumbnail_url
-      ? `${ROOT_PATH}/api/proxy?url=${encodeURIComponent(r.thumbnail_url)}${r.source_url ? `&ref=${encodeURIComponent(r.source_url)}` : ''}`
-      : null;
+    const ref = r.source_url ? `&ref=${encodeURIComponent(r.source_url)}` : '';
+    const proxy = (u) => `${ROOT_PATH}/api/proxy?url=${encodeURIComponent(u)}${ref}`;
+    // Grid loads the lightweight thumbnail; the lightbox opens the full-size image.
+    const proxyUrl = r.thumbnail_url ? proxy(r.thumbnail_url) : null;
+    const fullUrl = r.image_url ? proxy(r.image_url) : (proxyUrl || '');
     const thumb = proxyUrl
       ? `<img src="${proxyUrl}" alt="${esc(r.title)}" loading="lazy">`
       : `<div class="no-thumb">Нет фото</div>`;
 
     return `
       <div class="card">
-        <div class="card-thumb" data-proxy="${esc(proxyUrl || '')}" data-source="${esc(r.source_url)}">${thumb}</div>
+        <div class="card-thumb" data-proxy="${esc(proxyUrl || '')}" data-full="${esc(fullUrl)}" data-source="${esc(r.source_url)}">${thumb}</div>
         <a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer" class="card-body">
           <div class="card-title">${esc(r.title || 'Без заголовка')}</div>
           ${r.domain ? `<div class="card-domain">${esc(r.domain)}</div>` : ''}
@@ -239,3 +290,154 @@ function esc(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+// ── Custom dropdowns (progressive enhancement over <select>) ──────────────────
+
+const COLOR_SWATCHES = {
+  IMAGE_COLOR_COLOR: 'linear-gradient(90deg,#e74c3c,#f1c40f,#2ecc71,#3498db,#9b59b6)',
+  IMAGE_COLOR_GRAYSCALE: 'linear-gradient(90deg,#2b2b2b,#9a9a9a,#e2e2e2)',
+  IMAGE_COLOR_RED: '#e74c3c',
+  IMAGE_COLOR_ORANGE: '#e67e22',
+  IMAGE_COLOR_YELLOW: '#f1c40f',
+  IMAGE_COLOR_GREEN: '#27ae60',
+  IMAGE_COLOR_CYAN: '#17b3c4',
+  IMAGE_COLOR_BLUE: '#2d6cdf',
+  IMAGE_COLOR_VIOLET: '#8e44ad',
+  IMAGE_COLOR_WHITE: '#ffffff',
+  IMAGE_COLOR_BLACK: '#1a1a1a',
+};
+
+const CHEVRON_SVG =
+  '<svg class="cs-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+const CHECK_SVG =
+  '<svg class="cs-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+const openDropdowns = [];
+
+function dotMarkup(value) {
+  const swatch = COLOR_SWATCHES[value];
+  return swatch ? `<span class="cs-dot" style="background:${swatch}"></span>` : '';
+}
+
+function enhanceSelect(select) {
+  const options = Array.from(select.options);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'cs';
+  select.parentNode.insertBefore(wrap, select);
+  wrap.appendChild(select);
+  select.classList.add('cs-native');
+  select.tabIndex = -1;
+  select.setAttribute('aria-hidden', 'true');
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'cs-trigger';
+  trigger.setAttribute('aria-haspopup', 'listbox');
+  trigger.setAttribute('aria-expanded', 'false');
+  trigger.innerHTML = `<span class="cs-value"></span>${CHEVRON_SVG}`;
+  wrap.appendChild(trigger);
+
+  // Redirect the associated <label> click to the custom trigger
+  if (select.id) {
+    const label = document.querySelector(`label[for="${select.id}"]`);
+    if (label) label.addEventListener('click', (e) => { e.preventDefault(); trigger.focus(); });
+  }
+
+  const valueEl = trigger.querySelector('.cs-value');
+
+  const panel = document.createElement('ul');
+  panel.className = 'cs-panel';
+  panel.setAttribute('role', 'listbox');
+  panel.hidden = true;
+  panel.innerHTML = options
+    .map(
+      (o, i) =>
+        `<li class="cs-option" role="option" data-value="${esc(o.value)}" data-index="${i}">` +
+        `${dotMarkup(o.value)}<span>${esc(o.text)}</span>${CHECK_SVG}</li>`
+    )
+    .join('');
+  wrap.appendChild(panel);
+
+  const optionEls = Array.from(panel.children);
+  let highlighted = -1;
+
+  function syncTrigger() {
+    const o = select.options[select.selectedIndex];
+    valueEl.innerHTML = `${dotMarkup(o.value)}<span>${esc(o.text)}</span>`;
+    optionEls.forEach((el, i) => el.classList.toggle('selected', i === select.selectedIndex));
+  }
+
+  function setHighlight(i) {
+    if (highlighted >= 0) optionEls[highlighted].classList.remove('highlighted');
+    highlighted = i;
+    if (i >= 0) {
+      optionEls[i].classList.add('highlighted');
+      optionEls[i].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function open() {
+    closeAll();
+    wrap.classList.add('open');
+    panel.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    setHighlight(select.selectedIndex);
+    openDropdowns.push(close);
+  }
+
+  function close() {
+    wrap.classList.remove('open');
+    panel.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    const idx = openDropdowns.indexOf(close);
+    if (idx >= 0) openDropdowns.splice(idx, 1);
+  }
+
+  function choose(i) {
+    select.selectedIndex = i;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    syncTrigger();
+    close();
+    trigger.focus();
+  }
+
+  trigger.addEventListener('click', () => (wrap.classList.contains('open') ? close() : open()));
+
+  trigger.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      wrap.classList.contains('open') ? null : open();
+    }
+  });
+
+  panel.addEventListener('click', (e) => {
+    const li = e.target.closest('.cs-option');
+    if (li) choose(Number(li.dataset.index));
+  });
+
+  panel.addEventListener('mousemove', (e) => {
+    const li = e.target.closest('.cs-option');
+    if (li) setHighlight(Number(li.dataset.index));
+  });
+
+  wrap.addEventListener('keydown', (e) => {
+    if (panel.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight(Math.min(highlighted + 1, optionEls.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight(Math.max(highlighted - 1, 0)); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (highlighted >= 0) choose(highlighted); }
+    else if (e.key === 'Escape') { e.preventDefault(); close(); trigger.focus(); }
+  });
+
+  syncTrigger();
+}
+
+function closeAll() {
+  while (openDropdowns.length) openDropdowns.pop()();
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.cs')) closeAll();
+});
+
+document.querySelectorAll('#searchForm select').forEach(enhanceSelect);

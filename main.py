@@ -1,3 +1,6 @@
+import logging
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -5,6 +8,11 @@ from fastapi.templating import Jinja2Templates
 
 from config import settings
 from routes.search import router as search_router
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 
 app = FastAPI(title="Image Search API")
 

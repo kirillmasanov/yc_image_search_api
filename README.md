@@ -6,10 +6,12 @@
 
 ## Возможности
 
-- Поиск похожих изображений по URL или загруженному файлу
+- Два режима поиска (переключатель сверху):
+  - **По изображению** — похожие изображения по URL или загруженному файлу
+  - **По описанию** — изображения по текстовому запросу с фильтрами: формат, размер, ориентация, цвет, семейный фильтр
 - Фильтрация результатов по домену
 - Настраиваемое количество результатов (по умолчанию 20, до 500)
-- Автоматическая постраничная загрузка: при лимите > 40 страницы запрашиваются параллельно
+- Автоматическая постраничная загрузка: страницы запрашиваются параллельно
 - Предпросмотр загружаемого файла
 - Просмотр изображений в полный размер через lightbox
 - Вкладки **Результаты / Request / Response** для отладки API-запросов
@@ -57,7 +59,7 @@ uv run uvicorn main:app --reload
 
 ## API
 
-### `POST /api/search`
+### `POST /api/search` — поиск по изображению
 
 | Параметр | Тип | Описание |
 |---|---|---|
@@ -66,6 +68,19 @@ uv run uvicorn main:app --reload
 | `site` | строка | Ограничить поиск доменом (необязательно) |
 | `limit` | число | Количество результатов, 1–500 (по умолчанию 20) |
 
+### `POST /api/search/text` — поиск по описанию
+
+| Параметр | Тип | Описание |
+|---|---|---|
+| `query` | строка | Текстовый запрос (обязательно) |
+| `site` | строка | Ограничить поиск доменом (необязательно) |
+| `limit` | число | Количество результатов, 1–500 (по умолчанию 20) |
+| `img_format` | строка | Формат: `IMAGE_FORMAT_JPEG` / `PNG` / `GIF` (необязательно) |
+| `img_size` | строка | Размер: `IMAGE_SIZE_LARGE` / `MEDIUM` / … (необязательно) |
+| `img_orientation` | строка | Ориентация: `IMAGE_ORIENTATION_HORIZONTAL` / `VERTICAL` / `SQUARE` |
+| `img_color` | строка | Цвет: `IMAGE_COLOR_COLOR` / `GRAYSCALE` / `RED` / … |
+| `family` | строка | Семейный фильтр: `FAMILY_MODE_MODERATE` (по умолч.) / `NONE` / `STRICT` |
+
 ### `GET /api/proxy?url=<url>`
 
 Проксирует изображение через сервер для обхода hotlink protection. При недоступности URL возвращает SVG-заглушку.
@@ -73,5 +88,7 @@ uv run uvicorn main:app --reload
 ## Документация
 
 - [Как искать по изображению](https://aistudio.yandex.ru/docs/ru/search-api/operations/search-images-by-pic.html)
-- [API Reference](https://aistudio.yandex.ru/docs/ru/search-api/api-ref/ImageSearch/searchByImage.html)
+- [Поиск изображений — обзор](https://aistudio.yandex.ru/docs/ru/search-api/concepts/image-search.html)
+- [API Reference — ImageSearch](https://aistudio.yandex.ru/docs/ru/search-api/api-ref/ImageSearch/)
+- [API Reference — searchByImage](https://aistudio.yandex.ru/docs/ru/search-api/api-ref/ImageSearch/searchByImage.html)
 - [Тарифы](https://aistudio.yandex.ru/docs/ru/search-api/pricing.html)

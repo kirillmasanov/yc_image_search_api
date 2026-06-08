@@ -157,6 +157,8 @@ form {
 @media (max-width: 480px) {
   .form-row { flex-direction: column; }
   .form-group--narrow { flex: 1 !important; }
+  .mode-toggle { width: 100%; }
+  .mode-btn { flex: 1; padding-left: 8px; padding-right: 8px; }
 }
 
 /* Divider */
@@ -222,6 +224,148 @@ form {
   box-shadow: 0 0 0 3px rgba(74,144,226,0.15);
 }
 .form-group input:disabled { background: #f4f4f4; color: #aaa; cursor: not-allowed; }
+
+/* Custom dropdown (progressive enhancement over native <select>) */
+.cs { position: relative; }
+.cs-native {
+  /* kept in DOM only as the value source; hidden from view */
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0);
+}
+.cs-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d0d5de;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #1a1a2e;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cs-trigger:hover { border-color: #b9c0cd; }
+.cs-trigger:focus-visible,
+.cs.open .cs-trigger {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74,144,226,0.15);
+}
+.cs-value { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-arrow {
+  flex-shrink: 0;
+  color: #98a0b0;
+  transition: transform 0.2s, color 0.2s;
+}
+.cs.open .cs-arrow { transform: rotate(180deg); color: #4a90e2; }
+
+.cs-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px;
+  margin: 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #e0e3ea;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(20,28,48,0.14);
+}
+.cs-panel[hidden] { display: none; }
+.cs-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #2a2e3a;
+  cursor: pointer;
+}
+.cs-option:hover,
+.cs-option.highlighted { background: #eef4fc; }
+.cs-option.selected { color: #4a90e2; font-weight: 600; }
+.cs-option .cs-check {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  color: #4a90e2;
+}
+.cs-option.selected .cs-check { opacity: 1; }
+.cs-dot {
+  flex-shrink: 0;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+/* Mode toggle */
+.mode-toggle {
+  display: flex;
+  width: fit-content;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 auto 24px;
+  background: #e4e7ed;
+  border: 1px solid #d8dce4;
+  border-radius: 10px;
+}
+.mode-btn {
+  padding: 8px 24px;
+  border: none;
+  background: none;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #5a6072;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.mode-btn:hover:not(.active) { color: #2a2e3a; }
+.mode-btn.active {
+  background: #fff;
+  color: #4a90e2;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+/* Filter grid: even columns; a wrapped item keeps its column width (auto-fill)
+   instead of stretching full-width like a flex row would */
+.form-row--filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.form-row--filters .form-group { margin-bottom: 0; }
+
+/* Checkbox row */
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+  color: #2a2e3a;
+  cursor: pointer;
+  user-select: none;
+}
+.form-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4a90e2;
+  cursor: pointer;
+}
 
 /* Submit button */
 button[type="submit"] {
